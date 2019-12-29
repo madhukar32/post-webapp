@@ -1,0 +1,40 @@
+name: Go
+on: [push]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      env:
+        GOPATH: /home/runner/work/post-webapp/go
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+      env:
+        GOPATH: /home/runner/work/post-webapp/go
+      with:
+        fetch-depth: 1
+        path: go/src/github.com/madhukar32/post-webapp
+
+    - name: Get dependencies
+      env:
+        GOPATH: /home/runner/work/post-webapp/go
+      run: |
+        echo $GOPATH
+        mkdir -p /home/runner/work/post-webapp/go/bin
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            export PATH=$PATH:/home/runner/work/post-webapp/go/bin
+            dep ensure
+        fi
+
+    - name: Build
+      run: go build -v .
